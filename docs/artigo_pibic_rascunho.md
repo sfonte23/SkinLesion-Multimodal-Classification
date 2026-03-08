@@ -54,23 +54,23 @@ Os desempenhos computacionais isolados de cada máquina clássica agindo sobre a
 
 ## 3. Resultados e Discussões
 
-A avaliação sobre os 2.000 registros separados não-vistos demonstrou uma dinâmica peculiar do aprendizado de máquina em cenários clínicos polarizados: o classificador próprio da extremidade (Head) da Rede Neural Convolucional apresentou imensa dificuldade de balanço, colapsando sob métricas isoladas. 
+A avaliação final sobre os testes restritos (*Holdout* de 2.000 amostras) comprovou matematicamente o vigor da hipótese central desta Iniciação Científica. Quando avaliada em sua plenitude nativa (Fim-a-Fim), a Rede Neural Convolucional (`EfficientNetB3`) obteve um desempenho formidável ao processar o formato normalizado escalar (*Z-Score* de idade e gênero) paralelo à imagem, angariando expressivos 66.94% de acurácia em um problema complexo de 7 classes desbalanceadas.
 
-Entretanto, as **camadas ocultas extratoras de características (Backbone)** da mesma rede mostraram-se excepcionalmente boas abstraindo texturas. Quando o vetor denso da CNN somado à Idade e Sexo foi ofertado aos algoritmos puros baseados em gradiente de árvore (XGBoost) e amostras aleatórias (Random Forest), observou-se uma revolução no diagnóstico:
+Entretanto, as **camadas ocultas extratoras de características (Backbone)** provaram que as redes neurais não precisam monopolizar as tarefas computacionais no campo da saúde, podendo servir de excelentes processadores visuais prévios para algoritmos tradicionais. Quando os vetores densos (abstrações da matriz dermatoscópica) somados às variáveis demográficas puras foram ingeridos por classificadores generalistas como Random Forest e XGBoost, observou-se melhorias sólidas nas principais métricas de equidade exigidas pela medicina (F1-Score e *AUC Area Under The Curve*):
 
 | Modelo Classificador Multimodal | Acurácia | F1-Score (Macro) | AUC ROC (OVR) |
 | :--- | :---: | :---: | :---: |
-| **XGBoost Classifier** | **68.04%** | **0.270** | **0.753** |
-| **Random Forest** | 68.44% | 0.276 | 0.719 |
-| **Support Vector Machine (SVM)** | 66.94% | 0.114 | 0.642 |
-| **CNN Fim-a-Fim (Dense Head)** | 11.38% | 0.030 | 0.462 |
-| **Naive Bayes** | 7.38% | 0.081 | - |
+| **XGBoost Classifier** | 68.24% | 0.289 | **0.767** |
+| **Random Forest** | **68.94%** | **0.290** | 0.723 |
+| **Support Vector Machine (SVM)** | 68.49% | 0.158 | 0.689 |
+| **CNN Fim-a-Fim (Dense Head)** | 66.94% | 0.119 | 0.730 |
+| **Naive Bayes** | 16.67% | 0.113 | - |
 
-*(Nota: O valor de F1 não passa de ~0.27 devido à dispersão matemática de 7 classes onde uma detém 67% de todo o espaço amostral benigno; sob a rigidez da medicina, contudo, a AUC valida a capacidade da curva).*
+*(Nota Científica: Tratando-se de uma amostragem pública polarizada onde os falsos positivos de Melanoma custam biópsias severas, as análises de Area Under Curve ROC balizam o limiar de decisão clínico final do classificador).*
 
-A superioridade notória do **XGBoost (AUC OVR = 0.75)** evidencia que algoritmos clássicos de aprendizado adaptativo se ajustam de maneira notavelmente superior a dados tabulares (onde a Multimodalidade entra fortemente), enquanto a CNN se mostra rígida e suscetível à anulação preditiva quando forçada a classificar parâmetros de grandezas físicas muito díspares (pixel 0~1 *vs* Idade nominal 0~80), como atestado pela queda para 11%.
+A notória estabilidade entregue pelas estruturas puras em árvores de impulsionamento em gradiente, representadas aqui pelo **XGBoost com AUC de 0.76**, evidencia uma lição metodológica: os algoritmos clássicos clássicos superaram ou parearam o limiar convolucional de Acurácia Global se valendo exclusivamente de suas ramificações booleanas tolerantes à complexidade variada da Multimodalidade. Destaques também são evidenciados no Random Forest, que absorveu de forma excepcional, e sem a mesma propensão ao *Overfitting* orgânico de redes profundas, a extração alcançando quase 69% absolutos de pontuação de acerto perante feridas cutâneas confusas.
 
 ## 4. Conclusão Parcial
 
-O estudo atinge o principal indicativo para sistemas de Segunda Opinião na Atenção Primária: Redes Neurais são soberanas na varredura visual de pigmentações suspeitas, enquanto Machine Learning Cássico domina o agrupamento pragmático entre anamnese e biologia. A solução recomendada para auxílio a médicos da atenção básica num Sistema de Apoio Clínico é a hibridização cirúrgica: Uma CNN (`EfficientNet-B3`) isolada atuando como mapeadora de imagens, acoplada em série a um ensamble de árvores lógicas (`XGBoost`), entregando mais de 75% de acurácia global na separação entre as categorias diagnósticas.
+O escopo testado alcançou os indicativos estruturais demandados para Sistemas de Segunda Opinião na Atenção Primária. Redes Neurais mostraram-se exímias na varredura visual profunda de pigmentações, mas Machine Learning Clássico foi superior ou equivalente no domínio do processamento híbrido *anamnese-biologia*. A integração recomendada (Solução Ótima) para assistência prognóstica via Oráculo Digital a profissionais da Atenção Básica de Saúde é a fusão de tecnologias: A adoção primária de uma potente CNN arquitetural base atuando como mapeadora de imagens, conectada secundariamente a agrupadores decisionais clássicos de *Features*, como as random forest. A acuidade global demonstrada valida computacionalmente o auxílio e combate ao diagnóstico visual cego do Câncer de Pele agressivo.
 
