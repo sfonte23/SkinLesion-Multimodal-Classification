@@ -34,9 +34,9 @@ print(f"Loading local model from: {FULL_MODEL_PATH}...")
 try:
     meu_modelo = load_model(FULL_MODEL_PATH,
                             custom_objects={'categorical_focal_loss_fixed': categorical_focal_loss(gamma=2.0, alpha=0.75)})
-    print("✅ Model loaded successfully!")
+    print("Model loaded successfully!")
 except Exception as e:
-    print(f"❌ Error loading: {e}")
+    print(f"Error loading: {e}")
     exit(1)
 
 print("Preparing HAM10000 data from Kaggle...")
