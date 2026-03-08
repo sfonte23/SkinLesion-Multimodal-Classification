@@ -11,15 +11,23 @@ We utilized the widely recognized **HAM10000** ("Human Against Machine with 1000
 ## 🗂️ Project Structure
 
 ```
-├── docs/             # Documentation, Research Guidelines (Edital PIBIC), and articles
-├── models/           # Pre-trained Neural Networks (.keras)
-├── notebooks/        # Jupyter Notebooks containing the data pipelines and training/testing
-│   ├── Teste Algoritmo - V0 - HAM10000.ipynb
-│   ├── Teste Multimodal - HAM10000 - Corrigido.ipynb  # Primary Testing script
-│   └── Teste Multimodal - HAM10000.ipynb            
-├── results/          # Confusion matrices, comparative plots, and evaluation logs
-├── scripts/          # Python utility scripts extracted for review
-└── README.md         # Project documentation (You are here)
+├── docs/
+│   ├── artigo_pibic_rascunho.md   # Full PIBIC research article (source)
+│   ├── artigo_pibic.docx          # Word export for mentor review
+│   ├── colab_setup.md             # Google Colab setup guide
+│   └── local_setup.md             # Local environment setup guide
+├── models/                        # Pre-trained Neural Networks (.keras)
+├── notebooks/                     # Jupyter Notebooks (training pipelines)
+│   ├── Teste Multimodal - HAM10000 - Corrigido.ipynb  # Primary training script
+│   └── ...
+├── results/                       # Confusion matrices, plots, metrics CSV
+│   ├── metricas_oficiais_pibic.csv
+│   ├── comparativo_final_plot.png
+│   └── matrix_<Model>.png
+├── scripts/
+│   ├── evaluate_local.py          # Official evaluation script (local GPU/CPU)
+│   └── convert_to_word.py         # Markdown → Word converter
+└── README.md
 ```
 
 ## 🧠 Methodology
@@ -32,17 +40,36 @@ The methodology is built upon a dual-branch neural architecture:
 
 **Loss Function**: `Categorical Focal Loss` was successfully applied to penalize easily classified examples and target the severe class imbalance inherent to dermatological sets (where benign Nevi dominate over Melanoma/Carcinomas).
 
-## 🚀 Key Fixes
+## 📈 Official Results (Holdout — 2,015 samples, 20% stratified)
 
-During code review, critical improvements were applied to the testing script to adhere to scientific standards:
+| Model | Accuracy | F1-Score (Macro) | AUC ROC (OVR) |
+|:---|:---:|:---:|:---:|
+| **XGBoost** | 68.25% | 0.290 | **0.768** |
+| **Random Forest** | **68.95%** | **0.291** | 0.723 |
+| SVM | 68.50% | 0.159 | 0.689 |
+| CNN End-to-End | 66.95% | 0.120 | 0.730 |
+| Naive Bayes | 16.67% | 0.113 | — |
 
-- **Zero Data Leakage**: Enforced independent stratified data splits before evaluating feature extractors on classical algorithms.
-- **Metric Expansion**: Added AUC (Area Under the Receiver Operating Characteristic Curve) leveraging the One-vs-Rest strategy for the multi-class clinical requirement, completing the accuracy and Macro F1-Score reports.
+**Key finding:** The CNN end-to-end model collapsed to predicting the majority class (*Nevus*) for virtually all inputs, correctly identifying only 4 out of 223 Melanoma cases (recall ≈ 1.8%). Classical classifiers operating on CNN embeddings recovered meaningful discrimination, with XGBoost and Random Forest identifying 54 and 47 Melanoma cases respectively. **Global Accuracy alone is a misleading metric in imbalanced medical datasets** — AUC OVR and Macro F1-Score are the primary evaluation criteria.
+
+## 🚀 Critical Fixes Applied
+
+- **Zero Data Leakage**: Enforced stratified holdout split before feature extraction; classical classifiers trained only on a 2,000-sample subset of `train_df`, never exposed to `test_df`.
+- **Age Normalization Consistency**: Z-Score normalization applied identically at train and test time, matching training pipeline exactly.
+- **Metric Expansion**: AUC OVR added alongside Accuracy and Macro F1-Score for complete clinical evaluation.
 
 ## 🤝 How to Use
 
-For testing: simply run `notebooks/Teste Multimodal - HAM10000 - Corrigido.ipynb` preferably via **Google Colab** (enabling T4 or L4 GPU). It mounts directly to Google Drive or local storage and automatically evaluates your `modelo_multimodal_final.keras`.
+**Local evaluation** (requires `models/modelo_multimodal_final.keras`):
+```bash
+python scripts/evaluate_local.py
+```
+Results are saved to `results/` (confusion matrices, metrics CSV, comparative plot).
+
+**Training** (GPU recommended): run `notebooks/Teste Multimodal - HAM10000 - Corrigido.ipynb` via **Google Colab** (T4 or L4 GPU). See [docs/colab_setup.md](docs/colab_setup.md) for setup instructions.
+
+**Article**: The full PIBIC research article is available in [docs/artigo_pibic_rascunho.md](docs/artigo_pibic_rascunho.md) and exported to [docs/artigo_pibic.docx](docs/artigo_pibic.docx).
 
 ---
 
-*Developed for a localized PIBIC Scientific Publication comparing Image Textures vs. Logical Trees.*
+*Developed for a PIBIC Scientific Initiation comparing CNN-based multimodal fusion against classical ML on the HAM10000 dermatology dataset.*

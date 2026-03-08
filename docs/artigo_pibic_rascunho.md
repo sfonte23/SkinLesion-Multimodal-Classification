@@ -8,7 +8,7 @@
 ---
 
 ## Resumo
-A detecção precoce de lesões malignas na pele, como o melanoma, é fundamental para o aumento das taxas de sobrevida dos pacientes. No entanto, o acesso a médicos dermatologistas especialistas é escasso em diversas regiões do sistema de saúde. Este estudo propõe a avaliação de algoritmos de aprendizado de máquina atuando como um Sistema de Apoio à Decisão Clínica (CDSS). Adotamos uma **abordagem multimodal dupla**, onde o classificador é alimentado simultaneamente por características visuais (imagens dermatoscópicas extraídas via Deep Learning) e características clínicas do paciente (Idade, Sexo e Localização do corpo). Para avaliar a eficácia médica desta fusão frente ao severo desbalanceamento de classes do dataset HAM10000, comparamos o treinamento Fim-a-Fim de uma Rede Neural Convolucional (CNN Multimodal baseada na EfficientNetB3) contra algoritmos Clássicos (como XGBoost, Random Forest e SVM) treinados exclusivamente a partir das extrações profundas geradas pela CNN. A análise revelou que modelos de árvores de decisão estruturadas sobre *embeddings* de uma CNN suportaram a heterogeneidade multimodal de forma muito mais estável que a própria rede neural isoladamente, alcançando Acurácia superior a 68% e a melhor taxa métrica de *Area Under the ROC Curve* (AUC OVR) de 0.75. Tais arquiteturas híbridas demonstram forte viabilidade para triagem como segunda-opinião por médicos não-especialistas.
+A detecção precoce de lesões malignas na pele, como o melanoma, é fundamental para o aumento das taxas de sobrevida dos pacientes. No entanto, o acesso a dermatologistas especialistas é escasso em diversas regiões do sistema de saúde público. Este estudo propõe a avaliação de algoritmos de aprendizado de máquina atuando como um Sistema de Apoio à Decisão Clínica (CDSS). Adotamos uma **abordagem multimodal dupla**, onde o classificador é alimentado simultaneamente por características visuais (imagens dermatoscópicas extraídas via Deep Learning) e características clínicas do paciente (Idade, Sexo e Localização anatômica). Para avaliar a eficácia médica desta fusão frente ao severo desbalanceamento de classes do dataset HAM10000, comparamos o treinamento Fim-a-Fim de uma Rede Neural Convolucional (CNN Multimodal baseada na EfficientNetB3) contra algoritmos Clássicos (XGBoost, Random Forest e SVM) treinados sobre os *embeddings* extraídos da CNN. A análise das Matrizes de Confusão revelou um achado crítico: a CNN Fim-a-Fim colapsou para predizer predominantemente a classe majoritária (*Nevus*), perdendo 98% dos casos de Melanoma — evidenciando que Acurácia Global é métrica insuficiente em contextos clínicos desbalanceados. Em contrapartida, os classificadores clássicos sobre os *embeddings* convolucionais recuperaram discriminação entre patologias, com XGBoost alcançando a melhor *Area Under the ROC Curve* (AUC OVR) de **0.768** e Random Forest a maior Acurácia de **68.95%** com F1-Score Macro de **0.291**. Tais arquiteturas híbridas demonstram viabilidade como ferramenta de triagem de segunda opinião por médicos não-especialistas na Atenção Primária.
 
 *Palavras-chave: Deep Learning, Visão Computacional, Multimodalidade, Machine Learning, Câncer de Pele, HAM10000.*
 
@@ -54,23 +54,87 @@ Os desempenhos computacionais isolados de cada máquina clássica agindo sobre a
 
 ## 3. Resultados e Discussões
 
-A avaliação final sobre os testes restritos (*Holdout* de 2.000 amostras) comprovou matematicamente o vigor da hipótese central desta Iniciação Científica. Quando avaliada em sua plenitude nativa (Fim-a-Fim), a Rede Neural Convolucional (`EfficientNetB3`) obteve um desempenho formidável ao processar o formato normalizado escalar (*Z-Score* de idade e gênero) paralelo à imagem, angariando expressivos 66.94% de acurácia em um problema complexo de 7 classes desbalanceadas.
+A avaliação final sobre o conjunto de testes cego (*Holdout* estratificado de ~2.000 amostras, 20% do HAM10000) revelou achados de grande relevância diagnóstica, que transcendem os números globais de Acurácia e exigem análise aprofundada das Matrizes de Confusão por classe.
 
-Entretanto, as **camadas ocultas extratoras de características (Backbone)** provaram que as redes neurais não precisam monopolizar as tarefas computacionais no campo da saúde, podendo servir de excelentes processadores visuais prévios para algoritmos tradicionais. Quando os vetores densos (abstrações da matriz dermatoscópica) somados às variáveis demográficas puras foram ingeridos por classificadores generalistas como Random Forest e XGBoost, observou-se melhorias sólidas nas principais métricas de equidade exigidas pela medicina (F1-Score e *AUC Area Under The Curve*):
+### 3.1. Métricas Globais Comparativas
 
 | Modelo Classificador Multimodal | Acurácia | F1-Score (Macro) | AUC ROC (OVR) |
 | :--- | :---: | :---: | :---: |
-| **XGBoost Classifier** | 68.24% | 0.289 | **0.767** |
-| **Random Forest** | **68.94%** | **0.290** | 0.723 |
-| **Support Vector Machine (SVM)** | 68.49% | 0.158 | 0.689 |
-| **CNN Fim-a-Fim (Dense Head)** | 66.94% | 0.119 | 0.730 |
-| **Naive Bayes** | 16.67% | 0.113 | - |
+| **XGBoost Classifier** | 68.25% | 0.290 | **0.768** |
+| **Random Forest** | **68.95%** | **0.291** | 0.723 |
+| **Support Vector Machine (SVM)** | 68.50% | 0.159 | 0.689 |
+| **CNN Fim-a-Fim (Dense Head)** | 66.95% | 0.120 | 0.730 |
+| **Naive Bayes** | 16.67% | 0.113 | — |
 
-*(Nota Científica: Tratando-se de uma amostragem pública polarizada onde os falsos positivos de Melanoma custam biópsias severas, as análises de Area Under Curve ROC balizam o limiar de decisão clínico final do classificador).*
+*(Nota Científica: Em amostragem polarizada onde o falso negativo de Melanoma representa risco de vida, a AUC ROC e o F1-Score Macro são as métricas-chave, pois penalizam o viés de predição para a classe majoritária.)*
 
-A notória estabilidade entregue pelas estruturas puras em árvores de impulsionamento em gradiente, representadas aqui pelo **XGBoost com AUC de 0.76**, evidencia uma lição metodológica: os algoritmos clássicos clássicos superaram ou parearam o limiar convolucional de Acurácia Global se valendo exclusivamente de suas ramificações booleanas tolerantes à complexidade variada da Multimodalidade. Destaques também são evidenciados no Random Forest, que absorveu de forma excepcional, e sem a mesma propensão ao *Overfitting* orgânico de redes profundas, a extração alcançando quase 69% absolutos de pontuação de acerto perante feridas cutâneas confusas.
+![Figura 4 — Comparativo de métricas (Acurácia, F1-Score Macro e AUC OVR) entre todos os classificadores avaliados. O Naive Bayes foi excluído da escala visual por distorcer o eixo.](../results/comparativo_final_plot.png)
 
-## 4. Conclusão Parcial
+### 3.2. Análise das Matrizes de Confusão: o Colapso da CNN
 
-O escopo testado alcançou os indicativos estruturais demandados para Sistemas de Segunda Opinião na Atenção Primária. Redes Neurais mostraram-se exímias na varredura visual profunda de pigmentações, mas Machine Learning Clássico foi superior ou equivalente no domínio do processamento híbrido *anamnese-biologia*. A integração recomendada (Solução Ótima) para assistência prognóstica via Oráculo Digital a profissionais da Atenção Básica de Saúde é a fusão de tecnologias: A adoção primária de uma potente CNN arquitetural base atuando como mapeadora de imagens, conectada secundariamente a agrupadores decisionais clássicos de *Features*, como as random forest. A acuidade global demonstrada valida computacionalmente o auxílio e combate ao diagnóstico visual cego do Câncer de Pele agressivo.
+A análise das Matrizes de Confusão revela o achado mais crítico deste estudo. A CNN Multimodal, apesar de registrar 66.95% de acurácia global, demonstrou um **colapso preditivo severo**: praticamente todas as amostras de todas as classes foram classificadas como *Nevus Melanocítico* (nv), a classe majoritária (67% do dataset). De forma concreta, dos 223 casos de **Melanoma** no conjunto de teste, a CNN identificou corretamente apenas **4** (recall de Melanoma ≈ 1.8%). O mesmo padrão ocorre para *Carcinoma Basocelular* (0 acertos em 103 casos) e *Dermatofibroma* (0 acertos em 23 casos). A acurácia global da CNN é, portanto, um artefato estatístico do desequilíbrio de classes — o modelo aprendeu a "prever sempre Nevus" em vez de distinguir patologias.
+
+Este comportamento comprova empiricamente que a *Categorical Focal Loss*, embora teoricamente concebida para mitigar o desequilíbrio de classes, não foi suficiente para superar o colapso de gradiente nas camadas densas finais quando estas tentam simultaneamente aprender as representações visuais e processar a heterogeneidade tabular clínica.
+
+![Figura 1 — Matriz de Confusão: CNN Multimodal Fim-a-Fim. Nota-se o colapso preditivo: quase todas as amostras são classificadas como *nv* (Nevus), independentemente da classe real.](../results/matrix_Multimodal_CNN.png)
+
+### 3.3. Recuperação Diagnóstica pelos Classificadores Clássicos
+
+Os classificadores clássicos, ao operarem sobre os *embeddings* extraídos da camada `fused_dense_1` da CNN, demonstraram recuperação diagnóstica expressiva frente ao colapso da rede original:
+
+**XGBoost** (melhor AUC = 0.768): recuperou **54 acertos em Melanoma** (recall ≈ 24%), **15 em akiec**, **8 em bcc** e **1 em df**, distribuindo predições de forma muito mais heterogênea entre as classes. Seu desempenho superior em AUC evidencia maior capacidade probabilística de separação entre patologias, sendo o modelo com melhor aptidão para triagem clínica onde o limiar de decisão pode ser ajustado conforme a tolerância ao risco.
+
+![Figura 2 — Matriz de Confusão: XGBoost. Distribuição de predições significativamente mais heterogênea, com detecção real de Melanoma (54 acertos), akiec (15) e bcc (8).](../results/matrix_XGBoost.png)
+
+**Random Forest** (melhor Acurácia = 68.95%): apresentou distribuição similar ao XGBoost — **47 acertos de Melanoma**, **18 em akiec**, **10 em bcc** — porém com AUC levemente inferior (0.723). Seu F1-Score Macro de 0.291 é ligeiramente superior ao XGBoost (0.290), indicando equidade ligeiramente melhor entre classes, mas sem diferença estatisticamente significativa.
+
+![Figura 3 — Matriz de Confusão: Random Forest. Perfil de detecção similar ao XGBoost, com destaque para maior acurácia global (68.95%) e 47 Melanomas corretamente identificados.](../results/matrix_Random_Forest.png)
+
+**SVM**: apesar de alcançar 68.50% de acurácia, seu F1-Score Macro de apenas 0.159 — próximo ao da própria CNN — indica que o SVM, assim como a rede neural, ainda apresenta forte viés para a classe *Nevus*, acertando poucas amostras nas classes patológicas de risco.
+
+**Naive Bayes**: registrou 16.67% de acurácia, abaixo da distribuição da classe majoritária, demonstrando incompatibilidade estrutural com o espaço de alta dimensionalidade dos *embeddings* convolucionais (vetores densos de 256 dimensões), para o qual a hipótese de independência condicional do Naive Bayes é fortemente violada.
+
+### 3.4. Implicações Clínicas
+
+Do ponto de vista da medicina preventiva, o dado mais relevante é o **recall do Melanoma** — a capacidade de não deixar passar um caso real de câncer. Nenhum modelo alcançou desempenho suficiente para uso autônomo, mas a hierarquia é clara: XGBoost e Random Forest triplicam ou quadruplicam a sensibilidade ao Melanoma em relação à CNN isolada. Para um Sistema de Apoio à Decisão (SAD), isso representa a diferença entre um filtro clinicamente útil e um algoritmo sem valor diagnóstico prático, independentemente da acurácia global reportada.
+
+A persistência do viés preditivo para *Nevus* mesmo nos melhores classificadores — onde ~50% dos Melanomas ainda são classificados como Nevus — reforça que o problema do desbalanceamento de classes no HAM10000 exige estratégias de *oversampling* sintético (SMOTE) ou pesos de classe explícitos durante o treinamento dos classificadores clássicos, como extensão natural deste trabalho.
+
+## 4. Conclusão
+
+Os resultados deste estudo confirmam e expandem a hipótese central de forma mais crítica do que inicialmente antecipado. A avaliação conjunta das métricas globais e das Matrizes de Confusão revela três conclusões fundamentais:
+
+**1. A Acurácia Global é uma métrica enganosa em datasets médicos desbalanceados.** A CNN Multimodal, com 66.95% de acurácia, é clinicamente inoperante: colapsa a totalidade das predições para a classe majoritária (*Nevus*), perdendo 98.2% dos casos de Melanoma no conjunto de teste. Este achado reforça a necessidade imperativa de reportar F1-Score Macro e AUC ROC como métricas primárias em estudos médicos com classes desiguais.
+
+**2. A arquitetura híbrida CNN-Extratora + Classificador Clássico é o paradigma superior** para este domínio. XGBoost e Random Forest, ao herdarem as representações visuais profundas da EfficientNetB3 sem precisar otimizar os pesos da rede conjuntamente, escaparam do viés de gradiente para a classe majoritária. O XGBoost atingiu AUC de 0.768 — o melhor índice discriminativo global — enquanto o Random Forest alcançou a maior acurácia (68.95%) com excelente equidade de F1-Score (0.291). Ambos multiplicaram por mais de 10 vezes o recall de Melanoma em relação à CNN pura.
+
+**3. Nenhum modelo alcança limiar de autonomia clínica**, e este não é o objetivo proposto. O recall de Melanoma de ~24% nos melhores classificadores indica que o sistema, em sua configuração atual, é viável como **ferramenta de triagem de segunda opinião**, alertando médicos não-especialistas para casos de maior suspeita, e não como substituto diagnóstico. A redução do falso negativo de Melanoma exigirá extensões metodológicas futuras: aplicação de *oversampling* sintético (SMOTE ou ADASYN) sobre as classes minoritárias antes do treinamento dos classificadores clássicos, ajuste explícito de `class_weight`, e potencial fine-tuning supervisionado do backbone em um conjunto de dados mais balanceado.
+
+A contribuição principal deste trabalho é demonstrar empiricamente, com dados públicos e metodologia reprodutível, que **o backbone convolucional deve ser desacoplado da cabeça de classificação** em problemas de saúde multimodal com severo desbalanceamento. A CNN serve de extratora de representações visuais; os classificadores clássicos — especialmente XGBoost — servem de tomadores de decisão com maior robustez estatística frente à heterogeneidade dos dados clínicos. Esta arquitetura desacoplada constitui uma base sólida e promissora para o desenvolvimento de Sistemas de Apoio à Decisão Clínica acessíveis na Atenção Primária em Saúde.
+
+---
+
+## 5. Referências
+
+BREIMAN, L. **Random Forests**. *Machine Learning*, v. 45, n. 1, p. 5–32, 2001.
+
+BUSLAEV, A. et al. **Albumentations: Fast and Flexible Image Augmentations**. *Information*, v. 11, n. 2, p. 125, 2020.
+
+CHAWLA, N. V. et al. **SMOTE: Synthetic Minority Over-sampling Technique**. *Journal of Artificial Intelligence Research*, v. 16, p. 321–357, 2002.
+
+CHEN, T.; GUESTRIN, C. **XGBoost: A Scalable Tree Boosting System**. In: *Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining*. New York: ACM, 2016. p. 785–794.
+
+DENG, J. et al. **ImageNet: A Large-Scale Hierarchical Image Database**. In: *IEEE Conference on Computer Vision and Pattern Recognition (CVPR)*. Miami: IEEE, 2009. p. 248–255.
+
+ESTEVA, A. et al. **Dermatologist-level classification of skin cancer with deep neural networks**. *Nature*, v. 542, n. 7639, p. 115–118, 2017.
+
+LIN, T.-Y. et al. **Focal Loss for Dense Object Detection**. In: *Proceedings of the IEEE International Conference on Computer Vision (ICCV)*. Venice: IEEE, 2017. p. 2980–2988.
+
+MARCANO-CEDEÑO, A. et al. **A Clinical Decision Support System for Skin Lesion Diagnosis Using Artificial Intelligence**. *Sensors*, v. 21, n. 24, p. 8420, 2021.
+
+PEDREGOSA, F. et al. **Scikit-learn: Machine Learning in Python**. *Journal of Machine Learning Research*, v. 12, p. 2825–2830, 2011.
+
+TAN, M.; LE, Q. V. **EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks**. In: *Proceedings of the 36th International Conference on Machine Learning (ICML)*. Long Beach: PMLR, 2019. p. 6105–6114.
+
+TSCHANDL, P.; ROSENDAHL, C.; KITTLER, H. **The HAM10000 dataset, a large collection of multi-source dermatoscopic images of common pigmented skin lesions**. *Scientific Data*, v. 5, p. 180161, 2018.
 
