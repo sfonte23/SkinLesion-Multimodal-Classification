@@ -14,7 +14,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
 from xgboost import XGBClassifier
-from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay, f1_score, roc_auc_score
+from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay, f1_score, roc_auc_score, roc_curve
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -55,7 +55,12 @@ for d in IMG_DIRS:
 meta['image_path'] = meta['image_id'].map(img_dict)
 meta = meta.dropna(subset=['image_path']).reset_index(drop=True)
 
+meta['age'] = meta['age'].replace('unknown', np.nan).astype(float)
 meta['age'] = meta['age'].fillna(meta['age'].median())
+
+# >>> FIXED: NORMALIZING THE AGE THE EXACT SAME WAY AS IN TRAINING <<<
+meta['age'] = (meta['age'] - meta['age'].mean()) / meta['age'].std()
+
 meta['sex'] = meta['sex'].map({'male': 0, 'female': 1, 'unknown': 2}).fillna(2)
 meta['localization'] = meta['localization'].astype('category').cat.codes
 
@@ -101,6 +106,19 @@ resultados_acc = {}
 resultados_f1 = {}
 resultados_auc = {}
 
+# --- AUX FUNCTION FOR CONFUSION MATRIX ---
+def save_confusion_matrix(y_true, y_pred, model_name):
+    cm = confusion_matrix(y_true, y_pred)
+    # create figure
+    fig, ax = plt.subplots(figsize=(8, 6))
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
+    disp.plot(cmap=plt.cm.Blues, ax=ax, xticks_rotation=45)
+    ax.set_title(f"Confusion Matrix: {model_name}")
+    save_path = os.path.join('results', f'matrix_{model_name.replace(" ", "_")}.png')
+    plt.tight_layout()
+    plt.savefig(save_path)
+    plt.close()
+
 print("Evaluating CNN MultiModal...")
 y_probs_cnn = meu_modelo.predict([X_test_imgs, X_test_clins], verbose=0)
 y_pred_cnn = np.argmax(y_probs_cnn, axis=1)
@@ -115,6 +133,9 @@ except:
 resultados_acc["Multimodal CNN"] = acc
 resultados_f1["Multimodal CNN"] = f1
 resultados_auc["Multimodal CNN"] = auc
+
+# Save Conf Matrix for CNN
+save_confusion_matrix(y_test_labels, y_pred_cnn, "Multimodal CNN")
 
 for nome, clf in modelos_ml.items():
     print(f"Comparing with: {nome}...")
@@ -138,6 +159,9 @@ for nome, clf in modelos_ml.items():
     resultados_f1[nome] = f1
     resultados_auc[nome] = auc
 
+    # Save Conf Matrix for Model
+    save_confusion_matrix(y_test_labels, y_pred, nome)
+
 df_metricas = pd.DataFrame({
     'Algoritmo': list(resultados_acc.keys()),
     'Accuracy': list(resultados_acc.values()),
@@ -160,4 +184,5 @@ plt.legend(loc='lower right')
 plt.tight_layout()
 plot_path = os.path.join('results', 'comparativo_final_plot.png')
 plt.savefig(plot_path)
+plt.close()
 print(f"Saved plot: {plot_path}")
